@@ -17,5 +17,9 @@ dev_dependencies:
 
 flutter:
   plugin:
-    androidPackage: com.shinow.qrscan
-    pluginClass: QrscanPlugin
+    platforms:
+      android:
+        package: com.shinow.qrscan
+        pluginClass: QrscanPlugin
+      ios:
+        pluginClass: QrscanPlugin
