@@ -36,7 +36,7 @@ Add this to your package's pubspec.yaml file:
 ```yaml
 dependencies:
  qrscan:
-   git: git@codeup.aliyun.com:95sk/attila/app/plugin/qrcode_scanner.git
+   git: git@codeup.aliyun.com:95sk/attila/app/plugin/qrscan.git
 ```
 
 ## Scan Usage example
