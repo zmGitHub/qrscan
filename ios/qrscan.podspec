@@ -13,13 +13,13 @@ A new Flutter project.
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
-#  s.resources = "Resources/**/*.{png,jpeg,jpg,storyboard,xib,xcassets}"
   s.public_header_files = 'Classes/**/*.h'
   s.resource_bundles = {
-    'qrscan' => ['Resources/**/*.{storyboard}', "Assets/**/*"]
+    'qrscan' => ['Resources/**/*.{png}']
   }
   
   s.dependency 'Flutter'
+  s.swift_version = '5.0'
 
   s.ios.deployment_target = '8.0'
 end

@@ -12,9 +12,7 @@ public class SwiftQrscanPlugin: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if call.method == "scan" {
             //扫描二维码
-            print(bundle.bundlePath)
-            let sb = UIStoryboard(name: "QRCode", bundle: bundle)
-            let vc = sb.instantiateViewController(withIdentifier: "QRCodeViewController") as! QRCodeViewController
+            let vc = ScanViewController()
             vc.modalPresentationStyle = .fullScreen
             vc.closure = { string in
                 result(string)
@@ -41,11 +39,4 @@ public class SwiftQrscanPlugin: NSObject, FlutterPlugin {
         }
         return topController
     }
-    
-    lazy var bundle: Bundle = {
-        guard let url = Bundle(for: Self.self).url(forResource: "qrscan", withExtension: "bundle"), let bundle = Bundle(url: url) else {
-            return Bundle.main
-        }
-        return bundle
-    }()
 }
