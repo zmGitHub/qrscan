@@ -69,6 +69,7 @@ class ScanViewController: LBXScanViewController {
     }
     
     @objc func backButtonClick() {
+        closure?("")
         dismiss(animated: true, completion: nil)
     }
     
