@@ -20,7 +20,7 @@ A new Flutter project.
   
   s.dependency 'Flutter'
   s.swift_version = '5.0'
-  s.static_framework = true
+  s.static_framework = false
   s.ios.deployment_target = '8.0'
 
 end
