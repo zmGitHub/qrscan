@@ -27,7 +27,7 @@ SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   image_gallery_saver: 259eab68fb271cfd57d599904f7acdc7832e7ef2
   image_picker: 9c3312491f862b28d21ecd8fdf0ee14e601b3f09
-  qrscan: 972b4204cb63437652ce14ee614198dfd7a14c34
+  qrscan: 9c64714afc1624f1f4a52cbb6d8ac05a0031d661
 
 PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 
