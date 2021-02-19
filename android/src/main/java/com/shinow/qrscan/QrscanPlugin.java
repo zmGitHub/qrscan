@@ -123,7 +123,7 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
             } else {
                 String errorCode = intent != null ? intent.getStringExtra("ERROR_CODE") : null;
                 if (errorCode != null) {
-                    this.result.error(errorCode, null, null);
+                    this.result.success(null);
                 }
             }
             return true;

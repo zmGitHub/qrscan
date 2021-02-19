@@ -17,6 +17,8 @@ import android.widget.LinearLayout;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.uuzuche.lib_zxing.activity.CaptureFragment;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
@@ -29,9 +31,11 @@ public class SecondActivity extends AppCompatActivity {
     private LinearLayout lightLayout;
     private LinearLayout backLayout;
     private LinearLayout photoLayout;
-    private SensorManager sensorManager;
-    private Sensor lightSensor;
-    private SensorEventListener sensorEventListener;
+    private LinearLayout selfLayout;
+    //    private SensorManager sensorManager;
+    private TextView lightTextView;
+//    private Sensor lightSensor;
+//    private SensorEventListener sensorEventListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,10 +49,13 @@ public class SecondActivity extends AppCompatActivity {
         lightLayout = findViewById(R.id.scan_light);
         backLayout = findViewById(R.id.scan_back);
         photoLayout = findViewById(R.id.choose_photo);
-
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-        sensorEventListener = new LightSensorEventListener(lightLayout);
+        selfLayout = findViewById(R.id.choose_self);
+        lightTextView = findViewById(R.id.txt_light);
+        lightLayout.setSelected(false);
+        lightTextView.setText("轻点照亮");
+//        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+//        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+//        sensorEventListener = new LightSensorEventListener(lightLayout);
 
         initView();
     }
@@ -57,15 +64,15 @@ public class SecondActivity extends AppCompatActivity {
     protected void onResume() {
         // System.out.println("---------------------|||||||||||||---onResume---|||||||||||-------------------------");
         super.onResume();
-        if (lightSensor != null) {
-            sensorManager.registerListener(sensorEventListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        }
+//        if (lightSensor != null) {
+//            sensorManager.registerListener(sensorEventListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        }
     }
 
     @Override
     protected void onPause() {
         // System.out.println("---------------------|||||||||||||---onPause---|||||||||||-------------------------");
-        sensorManager.unregisterListener(sensorEventListener);
+//        sensorManager.unregisterListener(sensorEventListener);
         super.onPause();
     }
 
@@ -76,9 +83,13 @@ public class SecondActivity extends AppCompatActivity {
                 if (!isLightOpen) {
                     CodeUtils.isLightEnable(true);
                     isLightOpen = true;
+                    lightLayout.setSelected(true);
+                    lightTextView.setText("轻点关闭");
                 } else {
                     CodeUtils.isLightEnable(false);
                     isLightOpen = false;
+                    lightLayout.setSelected(false);
+                    lightTextView.setText("轻点照亮");
                 }
             }
         });
@@ -97,6 +108,18 @@ public class SecondActivity extends AppCompatActivity {
                 SecondActivity.this.startActivityForResult(intent, REQUEST_IMAGE);
             }
         });
+        selfLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent resultIntent = new Intent();
+                Bundle bundle = new Bundle();
+                bundle.putInt(CodeUtils.RESULT_TYPE, CodeUtils.RESULT_SUCCESS);
+                bundle.putString(CodeUtils.RESULT_STRING, "MY_QR_CODE");
+                resultIntent.putExtras(bundle);
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            }
+        });
     }
 
     @Override
@@ -106,13 +129,14 @@ public class SecondActivity extends AppCompatActivity {
             if (data != null) {
                 Uri uri = data.getData();
                 String path = ImageUtil.getImageAbsolutePath(SecondActivity.this, uri);
-                Intent intent = new Intent();
-                intent.setClass(SecondActivity.this, QrscanPlugin.class);
-                Bundle bundle = new Bundle();
-                bundle.putString("path", path);
-                intent.putExtra("secondBundle", bundle);
-                setResult(Activity.RESULT_OK, intent);
-                SecondActivity.this.finish();
+                CodeUtils.analyzeBitmap(ImageUtil.getImageAbsolutePath(SecondActivity.this, uri), analyzeCallback);
+//                Intent intent = new Intent();
+//                intent.setClass(SecondActivity.this, QrscanPlugin.class);
+//                Bundle bundle = new Bundle();
+//                bundle.putString("path", path);
+//                intent.putExtra("secondBundle", bundle);
+//                setResult(Activity.RESULT_OK, intent);
+//                SecondActivity.this.finish();
             }
         }
     }
