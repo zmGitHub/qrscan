@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 
 void main() {
@@ -77,11 +76,6 @@ class _MyAppState extends State<MyApp> {
               ],
             );
           },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _scanBytes(),
-          tooltip: 'Take a Photo',
-          child: const Icon(Icons.camera_alt),
         ),
       ),
     );
@@ -269,13 +263,6 @@ class _MyAppState extends State<MyApp> {
 
   Future _scanPath(String path) async {
     String barcode = await scanner.scanPath(path);
-    this._outputController.text = barcode;
-  }
-
-  Future _scanBytes() async {
-    File file = await ImagePicker.pickImage(source: ImageSource.camera);
-    Uint8List bytes = file.readAsBytesSync();
-    String barcode = await scanner.scanBytes(bytes);
     this._outputController.text = barcode;
   }
 

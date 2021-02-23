@@ -23,7 +23,7 @@
             android:label="QR-Scan"
             android:icon="@mipmap/ic_launcher">
         <activity
-                android:name="com.shinow.qrscan.SecondActivity"
+                android:name="com.shinow.qrscan.CustomActivity"
                 android:launchMode="singleTop"
                 android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
                 android:hardwareAccelerated="true"

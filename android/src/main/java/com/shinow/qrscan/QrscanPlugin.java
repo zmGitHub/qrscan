@@ -1,11 +1,13 @@
 package com.shinow.qrscan;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.text.TextUtils;
+import android.util.Log;
 
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -13,14 +15,16 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
-import com.uuzuche.lib_zxing.activity.CodeUtils;
-import com.uuzuche.lib_zxing.activity.ZXingLibrary;
+import com.google.zxing.BarcodeFormat;
+import com.king.zxing.CameraScan;
+import com.king.zxing.util.CodeUtils;
+import com.shinow.qrscan.util.UriUtils;
 
 import java.io.ByteArrayOutputStream;
 
-import static com.uuzuche.lib_zxing.activity.CodeUtils.RESULT_SUCCESS;
-import static com.uuzuche.lib_zxing.activity.CodeUtils.RESULT_TYPE;
 
 public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityResultListener {
 
@@ -28,19 +32,18 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
     private Activity activity;
     private int REQUEST_CODE = 100;
     private int REQUEST_IMAGE = 101;
+    public static final int RC_CAMERA = 0X01;
+    public static final int RC_READ_PHOTO = 0X02;
 
     public static void registerWith(Registrar registrar) {
         MethodChannel channel = new MethodChannel(registrar.messenger(), "qr_scan");
         QrscanPlugin plugin = new QrscanPlugin(registrar.activity());
         channel.setMethodCallHandler(plugin);
         registrar.addActivityResultListener(plugin);
-
-        ZXingLibrary.initDisplayOpinion(registrar.activity());
     }
 
     public QrscanPlugin(Activity activity) {
         this.activity = activity;
-        CheckPermissionUtils.initPermission(this.activity);
     }
 
     @Override
@@ -48,7 +51,11 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
         switch (call.method) {
             case "scan":
                 this.result = result;
-                showBarcodeView();
+                Boolean isShowSelf = (Boolean) call.arguments;
+                if (isShowSelf == null) {
+                    isShowSelf = false;
+                }
+                showBarcodeView(isShowSelf);
                 break;
             case "scan_photo":
                 this.result = result;
@@ -56,19 +63,12 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
                 break;
             case "scan_path":
                 this.result = result;
-                String path = call.argument("path");
-                CodeUtils.AnalyzeCallback analyzeCallback = new CustomAnalyzeCallback(this.result, this.activity.getIntent());
-                CodeUtils.analyzeBitmap(path, analyzeCallback);
-                break;
-            case "scan_bytes":
-                this.result = result;
-                byte[] bytes = call.argument("bytes");
-                Bitmap  bitmap = BitmapFactory.decodeByteArray(bytes , 0, bytes != null ? bytes.length : 0);
-                CodeUtils.analyzeBitmap(bitmap, new CustomAnalyzeCallback(this.result, this.activity.getIntent()));
+                String path = (String) call.arguments;
+                parsePhoto(path);
                 break;
             case "generate_barcode":
                 this.result = result;
-                generateQrCode(call);
+                createBarCode((String) call.arguments);
                 break;
             default:
                 result.notImplemented();
@@ -76,49 +76,88 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
         }
     }
 
-    private void showBarcodeView() {
-        Intent intent = new Intent(activity, SecondActivity.class);
+    private void parsePhoto(final String path) {
+        if (TextUtils.isEmpty(path)) {
+            return;
+        }
+        //异步解析
+        asyncThread(new Runnable() {
+            @Override
+            public void run() {
+                final String data = CodeUtils.parseCode(path);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d("Jenly", "result:" + data);
+                        result.success(data);
+                    }
+                });
+
+            }
+        });
+
+    }
+
+    private void asyncThread(Runnable runnable) {
+        new Thread(runnable).start();
+    }
+
+    private void showBarcodeView(boolean isShowSelf) {
+        Intent intent = new Intent(activity, CustomActivity.class);
+        intent.putExtra("isShowSelf", isShowSelf);
         activity.startActivityForResult(intent, REQUEST_CODE);
     }
 
-    private void choosePhotos() {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        activity.startActivityForResult(intent, REQUEST_IMAGE);
+    @AfterPermissionGranted(RC_READ_PHOTO)
+    private void checkExternalStoragePermissions() {
+        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        if (EasyPermissions.hasPermissions(activity, perms)) {//有权限
+            choosePhotos();
+        } else {
+            EasyPermissions.requestPermissions(this, "请允许获取使用相册权限",
+                    RC_READ_PHOTO, perms);
+        }
     }
 
-    private void generateQrCode(MethodCall call) {
-        String code = call.argument("code");
-        Bitmap bitmap = CodeUtils.createImage(code, 400, 400, null);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] datas = baos.toByteArray();
-        this.result.success(datas);
+    private void choosePhotos() {
+        Intent pickIntent = new Intent(Intent.ACTION_PICK,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        pickIntent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
+        activity.startActivityForResult(pickIntent, REQUEST_IMAGE);
+    }
+
+    /**
+     * 生成条形码
+     *
+     * @param content
+     */
+    private void createBarCode(final String content) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //生成条形码相关放在子线程里面
+                final Bitmap bitmap = CodeUtils.createBarCode(content, BarcodeFormat.CODE_128, 800, 200, null, true);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        byte[] datas = baos.toByteArray();
+                        result.success(datas);
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override
     public boolean onActivityResult(int code, int resultCode, Intent intent) {
         if (code == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && intent != null) {
-                Bundle secondBundle = intent.getBundleExtra("secondBundle");
-                if (secondBundle != null) {
-                    try {
-                        CodeUtils.AnalyzeCallback analyzeCallback = new CustomAnalyzeCallback(this.result, intent);
-                        CodeUtils.analyzeBitmap(secondBundle.getString("path"), analyzeCallback);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Bundle bundle = intent.getExtras();
-                    if (bundle != null) {
-                        if (bundle.getInt(RESULT_TYPE) == RESULT_SUCCESS) {
-                            String barcode = bundle.getString(CodeUtils.RESULT_STRING);
-                            this.result.success(barcode);
-                        }else{
-                            this.result.success(null);
-                        }
-                    }
+                Bundle bundle = intent.getExtras();
+                if (bundle != null) {
+                    String barcode = bundle.getString(CameraScan.SCAN_RESULT);
+                    this.result.success(barcode);
                 }
             } else {
                 String errorCode = intent != null ? intent.getStringExtra("ERROR_CODE") : null;
@@ -129,13 +168,8 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
             return true;
         } else if (code == REQUEST_IMAGE) {
             if (intent != null) {
-                Uri uri = intent.getData();
-                try {
-                    CodeUtils.AnalyzeCallback analyzeCallback = new CustomAnalyzeCallback(this.result, intent);
-                    CodeUtils.analyzeBitmap(ImageUtil.getImageAbsolutePath(activity, uri), analyzeCallback);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                final String path = UriUtils.getImagePath(activity, intent);
+                parsePhoto(path);
             }
             return true;
         }

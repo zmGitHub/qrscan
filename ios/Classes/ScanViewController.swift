@@ -14,7 +14,7 @@ class ScanViewController: LBXScanViewController {
     /**
      @brief  扫码区域上方提示文字
      */
-    var topTitle: UILabel?
+    var topTitle: UILabel = UILabel()
     
     /**
      @brief  闪关灯开启状态
@@ -29,6 +29,9 @@ class ScanViewController: LBXScanViewController {
     // 相册
     var btnPhoto: UIButton = UIButton()
     
+    // 我的二维码
+    var btnCode: UIView = UIView()
+    
     // 闪光灯
     var btnFlash: UIButton = UIButton()
     
@@ -42,8 +45,11 @@ class ScanViewController: LBXScanViewController {
         setNeedCodeImage(needCodeImg: true)
         
         //框向上移动10个像素
-        scanStyle?.centerUpOffset += 10
-        
+        scanStyle?.centerUpOffset += 40
+        scanStyle?.xScanRetangleOffset = 68
+        scanStyle?.colorRetangleLine = UIColor(red: 151.0/255.0, green: 151.0/255.0, blue: 151.0/255.0, alpha: 1.0)
+        scanStyle?.colorAngle = UIColor(red: 254.0/255.0, green: 107.0/255.0, blue: 6.0/255.0, alpha: 1.0)
+        scanStyle?.photoframeLineW = 3
         // Do any additional setup after loading the view.
     }
     
@@ -51,6 +57,7 @@ class ScanViewController: LBXScanViewController {
         
         super.viewDidAppear(animated)
         
+        drawTitleView()
         drawBottomItems()
         drawBackButton()
     }
@@ -59,6 +66,18 @@ class ScanViewController: LBXScanViewController {
         dismiss(animated: true, completion: nil)
         let result = arrayResult.first?.strScanned ?? ""
         closure?(result)
+    }
+    
+    @objc func closureResult() {
+        closure?("MY_QR_CODE")
+    }
+    
+    func drawTitleView(){
+        topTitle.text = "扫一扫"
+        topTitle.font = UIFont(name: "苹方-简 中黑体", size: 16)
+        topTitle.frame = CGRect(x: self.view.frame.width / 2 - 24,
+                  y: 40,width: 100, height: 50)
+        view.addSubview(topTitle)
     }
     
     func drawBackButton() {
@@ -80,9 +99,7 @@ class ScanViewController: LBXScanViewController {
         
         let yMax = self.view.frame.maxY - self.view.frame.minY
         
-        bottomItemsView = UIView(frame: CGRect(x: 0.0, y: yMax-100, width: self.view.frame.size.width, height: 100 ) )
-        
-        bottomItemsView!.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.6)
+        bottomItemsView = UIView(frame: CGRect(x: 0.0, y: yMax/3*2, width: self.view.frame.size.width, height: 100 ) )
         
         self.view.addSubview(bottomItemsView!)
         
@@ -90,7 +107,7 @@ class ScanViewController: LBXScanViewController {
         
         self.btnFlash = UIButton()
         btnFlash.bounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-        btnFlash.center = CGPoint(x: bottomItemsView!.frame.width * 2 / 7, y: bottomItemsView!.frame.height/2)
+        btnFlash.center = CGPoint(x: bottomItemsView!.frame.width / 2 , y: bottomItemsView!.frame.height/2)
         
         btnFlash.setImage(UIImage(named: "qrcode_scan_btn_flash_nor", in: bundle, compatibleWith: nil), for:UIControl.State.normal)
         btnFlash.addTarget(self, action: #selector(ScanViewController.openOrCloseFlash), for: UIControl.Event.touchUpInside)
@@ -98,15 +115,30 @@ class ScanViewController: LBXScanViewController {
         
         self.btnPhoto = UIButton()
         btnPhoto.bounds = btnFlash.bounds
-        btnPhoto.center = CGPoint(x: bottomItemsView!.frame.width * 5/7, y: bottomItemsView!.frame.height/2)
+        btnPhoto.center = CGPoint(x: bottomItemsView!.frame.width * 6/7, y: bottomItemsView!.frame.height/2)
         btnPhoto.setImage(UIImage(named: "qrcode_scan_btn_photo_nor", in: bundle, compatibleWith: nil), for: UIControl.State.normal)
         btnPhoto.setImage(UIImage(named: "qrcode_scan_btn_photo_down", in: bundle, compatibleWith: nil), for: UIControl.State.highlighted)
         
         btnPhoto.addTarget(self, action: #selector(openPhotoAlbum), for: UIControl.Event.touchUpInside)
         
+        self.btnCode = UIView()
+        btnCode.bounds = CGRect(x: 0, y: 0, width: 44, height: 44)
+        btnCode.center = CGPoint(x: bottomItemsView!.frame.width * 1/7, y: bottomItemsView!.frame.height/2)
+        // fillCode
+        let bgLayer1 = CALayer()
+        bgLayer1.frame = btnCode.bounds
+        bgLayer1.backgroundColor = UIColor(red: 0.4, green: 0.4, blue: 0.4, alpha: 0.8).cgColor
+        bgLayer1.cornerRadius = 22
+        btnCode.layer.addSublayer(bgLayer1)
+        let imageView = UIImageView(image: UIImage(named: "ic_self", in: bundle, compatibleWith: nil))
+        imageView.bounds = CGRect(x: 0, y: 0, width: 20, height: 20)
+//        imageView.center = CGPoint(x: imageView.bounds.width , y: imageView.bounds.height)
+        btnCode.addSubview(imageView)
+        btnCode.addGestureRecognizer(UIGestureRecognizer.init(target:self, action:#selector(ScanViewController.closureResult)))
         
         bottomItemsView?.addSubview(btnFlash)
         bottomItemsView?.addSubview(btnPhoto)
+        bottomItemsView?.addSubview(btnCode)
         
         view.addSubview(bottomItemsView!)
     }
