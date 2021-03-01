@@ -29,6 +29,9 @@ class ScanViewController: LBXScanViewController {
     /// 底部显示的功能项
     var bottomItemsView = UIView()
     
+    /// 标题
+    let titleLabel = UILabel()
+    
     /// 相册
     let btnPhoto = UIButton()
     
@@ -56,8 +59,8 @@ class ScanViewController: LBXScanViewController {
         style.centerUpOffset = 100
         style.photoframeAngleStyle = LBXScanViewPhotoframeAngleStyle.Inner
         style.photoframeLineW = 4
-        style.photoframeAngleW = 18
-        style.photoframeAngleH = 18
+        style.photoframeAngleW = 23
+        style.photoframeAngleH = 23
         style.isNeedShowRetangle = false
         style.anmiationStyle = LBXScanViewAnimationStyle.LineMove
         style.colorAngle = UIColor(red: 254/255, green: 107/255.0, blue: 6/255.0, alpha: 1.0)
@@ -91,6 +94,19 @@ class ScanViewController: LBXScanViewController {
     }
     
     func drawLabels() {
+        
+        titleLabel.text = "扫一扫"
+        titleLabel.textColor = UIColor.white
+        if #available(iOS 8.2, *) {
+            titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        } else {
+            titleLabel.font = UIFont.systemFont(ofSize: 16)
+        }
+        titleLabel.textAlignment = .center
+        titleLabel.size = CGSize(width: 100, height: 20)
+        titleLabel.center = CGPoint(x: UIScreen.main.bounds.width / 2, y: 65)
+        view.addSubview(titleLabel)
+        
         promptLabel.text = "将二维码放入框内，即可自动扫描"
         promptLabel.textAlignment = .center
         promptLabel.textColor = UIColor.white
