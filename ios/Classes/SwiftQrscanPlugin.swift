@@ -12,7 +12,10 @@ public class SwiftQrscanPlugin: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if call.method == "scan" {
             //扫描二维码
+            let isShowSelf = call.arguments as? NSNumber
             let vc = ScanViewController()
+            vc.isOpenInterestRect = true
+            vc.isShowSelf = isShowSelf?.boolValue ?? false
             vc.modalPresentationStyle = .fullScreen
             vc.closure = { string in
                 result(string)
