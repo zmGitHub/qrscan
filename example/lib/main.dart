@@ -248,7 +248,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future _scan() async {
-    String barcode = await scanner.scan();
+    String barcode = await scanner.scan(isShowSelf: true);
     if (barcode == null) {
       print('nothing return.');
     } else {
