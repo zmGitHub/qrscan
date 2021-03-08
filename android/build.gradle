@@ -3,9 +3,12 @@ version '1.0-SNAPSHOT'
 
 buildscript {
     repositories {
-        google()
-        jcenter()
-        maven { url 'https://jitpack.io' }
+        maven {url 'https://developer.huawei.com/repo/'}
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+        jcenter() { url 'https://jcenter.bintray.com/' }
     }
 
     dependencies {
@@ -15,9 +18,12 @@ buildscript {
 
 rootProject.allprojects {
     repositories {
-        google()
-        jcenter()
-        maven { url 'https://jitpack.io' }
+        maven {url 'https://developer.huawei.com/repo/'}
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+        jcenter() { url 'https://jcenter.bintray.com/' }
     }
 }
 
