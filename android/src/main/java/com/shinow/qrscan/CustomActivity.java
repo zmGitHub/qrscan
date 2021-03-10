@@ -215,6 +215,12 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
         final String path = UriUtils.getImagePath(this, data);
         LogUtils.d("path:" + path);
         if (TextUtils.isEmpty(path)) {
+            Intent resultIntent = new Intent();
+            Bundle bundle = new Bundle();
+            bundle.putString(CameraScan.SCAN_RESULT, "");
+            resultIntent.putExtras(bundle);
+            setResult(RESULT_OK, resultIntent);
+            finish();
             return;
         }
         //异步解析
