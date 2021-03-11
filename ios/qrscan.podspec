@@ -19,6 +19,11 @@ A new Flutter project.
   }
   
   s.dependency 'Flutter'
+  s.dependency 'ZBarSDK'
+  
+  s.frameworks = "AVFoundation", "CoreMedia", "CoreVideo", "QuartzCore"
+  s.libraries = "iconv"
+  
   s.swift_version = '5.0'
 #  s.static_framework = false
   s.ios.deployment_target = '8.0'

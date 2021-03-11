@@ -71,6 +71,8 @@ class ScanViewController: LBXScanViewController {
         
         //框向上移动10个像素
         scanStyle?.centerUpOffset += 10
+        
+        scanResultDelegate = self
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -78,12 +80,6 @@ class ScanViewController: LBXScanViewController {
         drawBackButton()
         drawLabels()
         drawBottomItems()
-    }
-    
-    override func handleCodeResult(arrayResult: [LBXScanResult]) {
-        dismiss(animated: true, completion: nil)
-        let result = arrayResult.first?.strScanned ?? ""
-        closure?(result)
     }
     
     func drawBackButton() {
@@ -200,4 +196,15 @@ class ScanViewController: LBXScanViewController {
         }
         return bundle
     }()
+}
+
+extension ScanViewController: LBXScanViewControllerDelegate {
+    func scanFinished(scanResult: LBXScanResult, error: String?) {
+        dismiss(animated: true, completion: nil)
+        if let _ = error {
+            closure?("")
+        } else {
+            closure?(scanResult.strScanned ?? "")
+        }
+    }
 }

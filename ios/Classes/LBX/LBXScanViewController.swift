@@ -9,6 +9,7 @@
 import UIKit
 import Foundation
 import AVFoundation
+import ZBarSDK
 
 public protocol LBXScanViewControllerDelegate: class {
      func scanFinished(scanResult: LBXScanResult, error: String?)
@@ -152,12 +153,31 @@ open class LBXScanViewController: UIViewController {
     
     @objc open func openPhotoAlbum() {
         LBXPermissions.authorizePhotoWith { [weak self] _ in
-            let picker = UIImagePickerController()
-            picker.sourceType = UIImagePickerController.SourceType.photoLibrary
-            picker.delegate = self
-            picker.allowsEditing = true
-            self?.present(picker, animated: true, completion: nil)
+//            let picker = UIImagePickerController()
+//            picker.sourceType = UIImagePickerController.SourceType.photoLibrary
+//            picker.delegate = self
+//            picker.allowsEditing = true
+//            self?.present(picker, animated: true, completion: nil)
+            let reader = ZBarReaderController()
+            reader.showsHelpOnFail = false
+            reader.readerDelegate = self
+            reader.sourceType = .photoLibrary
+            reader.scanner.setSymbology(ZBAR_I25, config: ZBAR_CFG_ENABLE, to: 0)
+            self?.present(reader, animated: true, completion: nil)
         }
+    }
+    
+    
+}
+
+extension LBXScanViewController: ZBarReaderDelegate {
+    public func readerControllerDidFail(toRead reader: ZBarReaderController!, withRetry retry: Bool) {
+        reader?.dismiss(animated: false, completion: nil)
+        guard let delegate = scanResultDelegate else {
+            fatalError("you must set scanResultDelegate or override this method without super keyword")
+        }
+        let scanResult = LBXScanResult(str: nil, img: nil, barCodeType: nil, corner: nil)
+        delegate.scanFinished(scanResult: scanResult, error: "empty")
     }
 }
 
@@ -168,18 +188,24 @@ extension LBXScanViewController: UIImagePickerControllerDelegate, UINavigationCo
     public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         picker.dismiss(animated: true, completion: nil)
         
-        let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage
-        let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage
-        guard let image = editedImage ?? originalImage else {
-            showMsg(title: nil, message: NSLocalizedString("Identify failed", comment: "Identify failed"))
-            return
-        }
-        let arrayResult = LBXScanWrapper.recognizeQRImage(image: image)
-        if !arrayResult.isEmpty {
+        if let result = info[UIImagePickerController.InfoKey(rawValue: ZBarReaderControllerResults)] as? [ZBarSymbol], let value = result.first {
+            let string = value.data ?? "";
+            let scanResult = LBXScanResult(str: string, img: nil, barCodeType: nil, corner: nil)
+            guard let delegate = scanResultDelegate else {
+                fatalError("you must set scanResultDelegate or override this method without super keyword")
+            }
+            delegate.scanFinished(scanResult: scanResult, error: nil)
+        } else {
+            let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage
+            let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage
+            guard let image = editedImage ?? originalImage else {
+                showMsg(title: nil, message: NSLocalizedString("Identify failed", comment: "Identify failed"))
+                return
+            }
+            let arrayResult = LBXScanWrapper.recognizeQRImage(image: image)
             handleCodeResult(arrayResult: arrayResult)
         }
     }
-    
 }
 
 //MARK: - 私有方法
