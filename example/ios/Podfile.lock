@@ -1,13 +1,13 @@
 PODS:
+  - ATBarSDK (1.4.1)
   - Flutter (1.0.0)
   - image_gallery_saver (1.5.0):
     - Flutter
   - image_picker (0.0.1):
     - Flutter
   - qrscan (0.0.1):
+    - ATBarSDK
     - Flutter
-    - ZBarSDK
-  - ZBarSDK (1.3.1)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -17,7 +17,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - ZBarSDK
+    - ATBarSDK
 
 EXTERNAL SOURCES:
   Flutter:
@@ -30,12 +30,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/qrscan/ios"
 
 SPEC CHECKSUMS:
+  ATBarSDK: b6aa2b6a120ac7d6b1ff041bd60b9edde6bb17c4
   Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
   image_gallery_saver: 259eab68fb271cfd57d599904f7acdc7832e7ef2
   image_picker: 9c3312491f862b28d21ecd8fdf0ee14e601b3f09
-  qrscan: 246aa9ec08b10e68c6eede0e600bcc407462789c
-  ZBarSDK: 4c1b5daeb7d6cc67dc9355e690af0230a661f6ec
+  qrscan: 1ca21e967b638d6f9448b838fdf38fee1e5e8804
 
 PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 
-COCOAPODS: 1.10.0
+COCOAPODS: 1.10.1

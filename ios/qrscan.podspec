@@ -19,7 +19,7 @@ A new Flutter project.
   }
   
   s.dependency 'Flutter'
-  s.dependency 'ZBarSDK'
+  s.dependency 'ATBarSDK'
   
   s.frameworks = "AVFoundation", "CoreMedia", "CoreVideo", "QuartzCore"
   s.libraries = "iconv"
