@@ -77,7 +77,6 @@ public class CustomActivity extends AppCompatActivity {
         scannerView.setCallback(new Callback() {
             @Override
             public void result(com.shouzhong.scanner.Result result) {
-                Toast.makeText(CustomActivity.this, result.data, Toast.LENGTH_SHORT).show();
                 startVibrator();
                 Intent resultIntent = new Intent();
                 Bundle bundle = new Bundle();
