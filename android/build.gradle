@@ -39,5 +39,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'pub.devrel:easypermissions:0.2.0'
-    implementation 'com.king.zxing:zxing-lite:2.0.3'
+    implementation "com.google.zxing:core:3.3.3"
+    implementation 'com.shouzhong:Scanner:1.1.3'
+    implementation 'com.shouzhong:ScannerZBarLib:1.0.0'
 }

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 
 void main() {
@@ -137,14 +136,6 @@ class _MyAppState extends State<MyApp> {
                           flex: 5,
                           child: GestureDetector(
                             onTap: () async {
-                              final success = await ImageGallerySaver.saveImage(this.bytes);
-                              SnackBar snackBar;
-                              if (success) {
-                                snackBar = new SnackBar(content: new Text('Successful Preservation!'));
-                                Scaffold.of(context).showSnackBar(snackBar);
-                              } else {
-                                snackBar = new SnackBar(content: new Text('Save failed!'));
-                              }
                             },
                             child: Text(
                               'save',

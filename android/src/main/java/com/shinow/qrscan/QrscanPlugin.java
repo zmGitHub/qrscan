@@ -9,25 +9,24 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.zxing.BarcodeFormat;
+import com.shinow.qrscan.util.CodeUtils;
+import com.shinow.qrscan.util.UriUtils;
+
+import java.io.ByteArrayOutputStream;
+
+import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import com.google.zxing.BarcodeFormat;
-import com.king.zxing.CameraScan;
-import com.king.zxing.util.CodeUtils;
-import com.shinow.qrscan.util.UriUtils;
-
-import java.io.ByteArrayOutputStream;
-
 
 public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityResultListener {
-
+    public static final String SCAN_RESULT = "result";
     private Result result = null;
     private Activity activity;
     private int REQUEST_CODE = 100;
@@ -156,7 +155,7 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
             if (resultCode == Activity.RESULT_OK && intent != null) {
                 Bundle bundle = intent.getExtras();
                 if (bundle != null) {
-                    String barcode = bundle.getString(CameraScan.SCAN_RESULT);
+                    String barcode = bundle.getString(SCAN_RESULT);
                     this.result.success(barcode);
                 }
             } else {

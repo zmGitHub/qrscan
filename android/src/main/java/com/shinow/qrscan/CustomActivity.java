@@ -1,51 +1,39 @@
 package com.shinow.qrscan;
 
 import android.Manifest;
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.camera.view.PreviewView;
-import androidx.fragment.app.Fragment;
 
-import com.google.zxing.Result;
-import com.king.zxing.CameraScan;
-import com.king.zxing.DecodeConfig;
-import com.king.zxing.DecodeFormatManager;
-import com.king.zxing.DefaultCameraScan;
-import com.king.zxing.ViewfinderView;
-import com.king.zxing.analyze.MultiFormatAnalyzer;
-import com.king.zxing.util.CodeUtils;
-import com.king.zxing.util.LogUtils;
+import com.shinow.qrscan.util.CodeUtils;
 import com.shinow.qrscan.util.UriUtils;
+import com.shouzhong.scanner.Callback;
+import com.shouzhong.scanner.IViewFinder;
+import com.shouzhong.scanner.ScannerView;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import static androidx.camera.core.CameraX.getContext;
-
 /**
- * 自定义扫码：当直接使用CaptureActivity
- * 自定义扫码，切记自定义扫码需在{@link Activity}或者{@link Fragment}相对应的生命周期里面调用{@link #mCameraScan}对应的生命周期
  *
- * @author <a href="mailto:jenly1314@gmail.com">Jenly</a>
  */
-public class CustomActivity extends AppCompatActivity implements CameraScan.OnScanResultCallback {
+public class CustomActivity extends AppCompatActivity {
 
-    private CameraScan mCameraScan;
-
-    private PreviewView previewView;
-
-    private ViewfinderView viewfinderView;
+    private ScannerView scannerView;
 
     private View backLayout;
     private View lightLayout;
@@ -54,6 +42,7 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
     private TextView lightTextView;
 
     private Toast toast;
+    private Vibrator vibrator;
 
     public static final int RC_CAMERA = 0X01;
     public static final int RC_READ_PHOTO = 0X02;
@@ -69,8 +58,7 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
 
     private void initUI() {
         boolean isShowSelf = getIntent().getBooleanExtra("isShowSelf", false);
-        previewView = findViewById(R.id.previewView);
-        viewfinderView = findViewById(R.id.viewfinderView);
+        scannerView = findViewById(R.id.previewView);
         lightLayout = findViewById(R.id.ivFlashlight);
         backLayout = findViewById(R.id.scan_back);
         photoLayout = findViewById(R.id.choose_photo);
@@ -78,21 +66,29 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
         lightTextView = findViewById(R.id.txt_light);
 
         selfLayout.setVisibility(isShowSelf ? View.VISIBLE : View.GONE);
-        //初始化解码配置
-        DecodeConfig decodeConfig = new DecodeConfig();
-        decodeConfig.setHints(DecodeFormatManager.DEFAULT_HINTS)//如果只有识别二维码的需求，这样设置效率会更高，不设置默认为DecodeFormatManager.DEFAULT_HINTS
-                .setFullAreaScan(false)//设置是否全区域识别，默认false
-                .setAreaRectRatio(0.8f)//设置识别区域比例，默认0.8，设置的比例最终会在预览区域裁剪基于此比例的一个矩形进行扫码识别
-                .setAreaRectVerticalOffset(0)//设置识别区域垂直方向偏移量，默认为0，为0表示居中，可以为负数
-                .setAreaRectHorizontalOffset(0);//设置识别区域水平方向偏移量，默认为0，为0表示居中，可以为负数
-        mCameraScan = new DefaultCameraScan(this, previewView);
-
-        //在启动预览之前，设置分析器，只识别二维码
-        mCameraScan
-                .setVibrate(true)//设置是否震动，默认为false
-                .setNeedAutoZoom(true)//二维码太小时可自动缩放，默认为false
-                .setAnalyzer(new MultiFormatAnalyzer(decodeConfig))
-                .startCamera();//设置分析器,如果内置实现的一些分析器不满足您的需求，你也可以自定义去实现
+        scannerView.setShouldAdjustFocusArea(true);
+        scannerView.setViewFinder(new ViewFinder(this));
+        scannerView.setSaveBmp(false);
+        scannerView.setRotateDegree90Recognition(true);
+        scannerView.setEnableZXing(true);
+        scannerView.setEnableZBar(true);
+        scannerView.setEnableQrcode(true);
+        scannerView.setEnableBarcode(true);
+        scannerView.setCallback(new Callback() {
+            @Override
+            public void result(com.shouzhong.scanner.Result result) {
+                Toast.makeText(CustomActivity.this, result.data, Toast.LENGTH_SHORT).show();
+                startVibrator();
+                Intent resultIntent = new Intent();
+                Bundle bundle = new Bundle();
+                bundle.putString(QrscanPlugin.SCAN_RESULT,  result.data);
+                resultIntent.putExtras(bundle);
+                setResult(RESULT_OK, resultIntent);
+                finish();
+//                tvResult.setText("识别结果：\n" + result.toString());
+//                scannerView.restartPreviewAfterDelay(2000);
+            }
+        });
         backLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -104,7 +100,7 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
             public void onClick(View view) {
                 Intent resultIntent = new Intent();
                 Bundle bundle = new Bundle();
-                bundle.putString(CameraScan.SCAN_RESULT, "MY_QR_CODE");
+                bundle.putString(QrscanPlugin.SCAN_RESULT, "MY_QR_CODE");
                 resultIntent.putExtras(bundle);
                 setResult(RESULT_OK, resultIntent);
                 finish();
@@ -125,43 +121,64 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        scannerView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        scannerView.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
-        mCameraScan.release();
+        if (vibrator != null) {
+            vibrator.cancel();
+            vibrator = null;
+        }
         super.onDestroy();
+    }
+
+    private void startVibrator() {
+        if (vibrator == null)
+            vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        vibrator.vibrate(300);
     }
 
     /**
      * 切换闪光灯状态（开启/关闭）
      */
     protected void toggleTorchState() {
-        if (mCameraScan != null) {
-            boolean isTorch = mCameraScan.isTorchEnabled();
-            mCameraScan.enableTorch(!isTorch);
+        if (scannerView != null) {
+            scannerView.toggleFlash();
+            boolean isFlashOn = scannerView.isFlashOn();
             if (lightLayout != null) {
-                lightLayout.setSelected(!isTorch);
-                lightTextView.setText(isTorch ? "轻点关闭" : "轻点照亮");
+                lightLayout.setSelected(isFlashOn);
+                lightTextView.setText(!isFlashOn ? "轻点关闭" : "轻点照亮");
             }
         }
     }
 
-    /**
-     * 扫码结果回调
-     *
-     * @param result 扫码结果
-     * @return
-     */
-    @Override
-    public boolean onScanResultCallback(Result result) {
-//        Toast.makeText(CustomActivity.this, result.getText(), Toast.LENGTH_SHORT).show();
-//            Intent resultIntent = new Intent();
-//            Bundle bundle = new Bundle();
-//            bundle.putString(CameraScan.SCAN_RESULT, result.getText());
-//            resultIntent.putExtras(bundle);
-//            setResult(RESULT_OK, resultIntent);
-//            Toast.makeText(CustomActivity.this, result.getText(), Toast.LENGTH_SHORT).show();
-//            finish();
-        return false;
-    }
+//    /**
+//     * 扫码结果回调
+//     *
+//     * @param result 扫码结果
+//     * @return
+//     */
+//    @Override
+//    public boolean onScanResultCallback(Result result) {
+////        Toast.makeText(CustomActivity.this, result.getText(), Toast.LENGTH_SHORT).show();
+////            Intent resultIntent = new Intent();
+////            Bundle bundle = new Bundle();
+////            bundle.putString(CameraScan.SCAN_RESULT, result.getText());
+////            resultIntent.putExtras(bundle);
+////            setResult(RESULT_OK, resultIntent);
+////            Toast.makeText(CustomActivity.this, result.getText(), Toast.LENGTH_SHORT).show();
+////            finish();
+//        return false;
+//    }
 
     @AfterPermissionGranted(RC_READ_PHOTO)
     private void checkExternalStoragePermissions() {
@@ -213,11 +230,11 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
 
     private void parsePhoto(Intent data) {
         final String path = UriUtils.getImagePath(this, data);
-        LogUtils.d("path:" + path);
+        Log.v("CustomActivity", "path:" + path);
         if (TextUtils.isEmpty(path)) {
             Intent resultIntent = new Intent();
             Bundle bundle = new Bundle();
-            bundle.putString(CameraScan.SCAN_RESULT, "");
+            bundle.putString(QrscanPlugin.SCAN_RESULT, "");
             resultIntent.putExtras(bundle);
             setResult(RESULT_OK, resultIntent);
             finish();
@@ -233,7 +250,7 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
                     public void run() {
                         Intent resultIntent = new Intent();
                         Bundle bundle = new Bundle();
-                        bundle.putString(CameraScan.SCAN_RESULT, result);
+                        bundle.putString(QrscanPlugin.SCAN_RESULT, result);
                         resultIntent.putExtras(bundle);
                         setResult(RESULT_OK, resultIntent);
                         finish();
@@ -249,5 +266,147 @@ public class CustomActivity extends AppCompatActivity implements CameraScan.OnSc
 
     private void asyncThread(Runnable runnable) {
         new Thread(runnable).start();
+    }
+
+    class ViewFinder extends View implements IViewFinder {
+        private Rect framingRect;//扫码框所占区域
+        private float widthRatio = 0.66f;//扫码框宽度占view总宽度的比例
+        private float heightRatio = 0.8f;
+        private float heightWidthRatio =1f;//扫码框的高宽比
+        private int leftOffset = -1;//扫码框相对于左边的偏移量，若为负值，则扫码框会水平居中
+        private int topOffset = -1;//扫码框相对于顶部的偏移量，若为负值，则扫码框会竖直居中
+
+        private int laserColor = 0xaaFE6B06;// 扫描线颜色
+        private int maskColor = 0x60000000;// 阴影颜色
+        private int borderColor = 0xffFE6B06;// 边框颜色
+        private int borderStrokeWidth = 12;// 边框宽度
+        private int borderLineLength = 72;// 边框长度
+
+        private Paint laserPaint;// 扫描线
+        private Paint maskPaint;// 阴影遮盖画笔
+        private Paint borderPaint;// 边框画笔
+
+        private int position;
+
+        public ViewFinder(Context context) {
+            super(context);
+            setWillNotDraw(false);//需要进行绘制
+            laserPaint = new Paint();
+            laserPaint.setColor(laserColor);
+            laserPaint.setStyle(Paint.Style.FILL);
+            laserPaint.setStrokeWidth(1.0f);
+            maskPaint = new Paint();
+            maskPaint.setColor(maskColor);
+            borderPaint = new Paint();
+            borderPaint.setColor(borderColor);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(borderStrokeWidth);
+            borderPaint.setAntiAlias(true);
+        }
+
+        @Override
+        protected void onSizeChanged(int xNew, int yNew, int xOld, int yOld) {
+            updateFramingRect();
+        }
+
+        @Override
+        public void onDraw(Canvas canvas) {
+            if (getFramingRect() == null) {
+                return;
+            }
+            drawViewFinderMask(canvas);
+            drawViewFinderBorder(canvas);
+            drawLaser(canvas);
+        }
+
+        private void drawLaser(Canvas canvas) {
+            Rect framingRect = getFramingRect();
+            int top = framingRect.top + 10 + position;
+            canvas.drawRect(framingRect.left + 10, top, framingRect.right - 10, top + 5, laserPaint);
+            position = framingRect.bottom - framingRect.top - 25 < position ? 0 : position + 2;
+            //区域刷新
+            postInvalidateDelayed(2, framingRect.left + 10, framingRect.top + 10, framingRect.right - 10, framingRect.bottom - 10);
+        }
+
+        /**
+         * 绘制扫码框四周的阴影遮罩
+         */
+        private void drawViewFinderMask(Canvas canvas) {
+            int width = canvas.getWidth();
+            int height = canvas.getHeight();
+            Rect framingRect = getFramingRect();
+            canvas.drawRect(0, 0, width, framingRect.top, maskPaint);//扫码框顶部阴影
+            canvas.drawRect(0, framingRect.top, framingRect.left, framingRect.bottom, maskPaint);//扫码框左边阴影
+            canvas.drawRect(framingRect.right, framingRect.top, width, framingRect.bottom, maskPaint);//扫码框右边阴影
+            canvas.drawRect(0, framingRect.bottom, width, height, maskPaint);//扫码框底部阴影
+        }
+
+        /**
+         * 绘制扫码框的边框
+         */
+        private void drawViewFinderBorder(Canvas canvas) {
+            Rect framingRect = getFramingRect();
+
+            // Top-left corner
+            Path path = new Path();
+            path.moveTo(framingRect.left, framingRect.top + borderLineLength);
+            path.lineTo(framingRect.left, framingRect.top);
+            path.lineTo(framingRect.left + borderLineLength, framingRect.top);
+            canvas.drawPath(path, borderPaint);
+
+            // Top-right corner
+            path.moveTo(framingRect.right, framingRect.top + borderLineLength);
+            path.lineTo(framingRect.right, framingRect.top);
+            path.lineTo(framingRect.right - borderLineLength, framingRect.top);
+            canvas.drawPath(path, borderPaint);
+
+            // Bottom-right corner
+            path.moveTo(framingRect.right, framingRect.bottom - borderLineLength);
+            path.lineTo(framingRect.right, framingRect.bottom);
+            path.lineTo(framingRect.right - borderLineLength, framingRect.bottom);
+            canvas.drawPath(path, borderPaint);
+
+            // Bottom-left corner
+            path.moveTo(framingRect.left, framingRect.bottom - borderLineLength);
+            path.lineTo(framingRect.left, framingRect.bottom);
+            path.lineTo(framingRect.left + borderLineLength, framingRect.bottom);
+            canvas.drawPath(path, borderPaint);
+        }
+
+        /**
+         * 设置framingRect的值（扫码框所占的区域）
+         */
+        private synchronized void updateFramingRect() {
+            Point viewSize = new Point(getWidth(), getHeight());
+            int width = getWidth() * 801 / 1080, height = getWidth() * 811 / 1080;
+            width = (int) (getWidth() * widthRatio);
+//            height = (int) (getHeight() * heightRatio);
+            height = (int) (heightWidthRatio * width);
+
+            int left, top;
+            if (leftOffset < 0) {
+                left = (viewSize.x - width) / 2;//水平居中
+            } else {
+                left = leftOffset;
+            }
+            if (topOffset < 0) {
+                top = (viewSize.y - height) / 3;//竖直居中
+            } else {
+                top = topOffset;
+            }
+            framingRect = new Rect(left, top, left + width, top + height);
+        }
+
+        @Override
+        public Rect getFramingRect() {
+            return framingRect;
+        }
+    }
+
+    class ViewFinder2 implements IViewFinder {
+        @Override
+        public Rect getFramingRect() {
+            return new Rect(240, 240, 840, 840);
+        }
     }
 }
