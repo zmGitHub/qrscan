@@ -9,7 +9,7 @@
 import UIKit
 import Foundation
 import AVFoundation
-import ZBarSDK
+import ATBarSDK
 
 public protocol LBXScanViewControllerDelegate: class {
      func scanFinished(scanResult: LBXScanResult, error: String?)
