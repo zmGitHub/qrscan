@@ -181,12 +181,14 @@ class ScanViewController: LBXScanViewController {
     /// 我的二维码
     @objc func myCode() {
         closure?("MY_QR_CODE")
+        UIApplication.shared.statusBarStyle = .default
         dismiss(animated: false, completion: nil)
     }
     
     /// 返回按钮
     @objc func backButtonClick() {
         closure?("")
+        UIApplication.shared.statusBarStyle = .default
         dismiss(animated: true, completion: nil)
     }
     
@@ -201,6 +203,7 @@ class ScanViewController: LBXScanViewController {
 extension ScanViewController: LBXScanViewControllerDelegate {
     func scanFinished(scanResult: LBXScanResult, error: String?) {
         dismiss(animated: true, completion: nil)
+        UIApplication.shared.statusBarStyle = .default
         if let _ = error {
             closure?("")
         } else {
