@@ -187,7 +187,6 @@ class ScanViewController: LBXScanViewController {
     
     /// 返回按钮
     @objc func backButtonClick() {
-        closure?("")
         UIApplication.shared.statusBarStyle = .default
         dismiss(animated: true, completion: nil)
     }
