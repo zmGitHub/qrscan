@@ -5,7 +5,7 @@ author: Shusheng <leyansorosame@gmail.com>
 homepage: https://github.com/leyan95/qrcode_scanner
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: '>=2.18.5 <3.0.0'
 
 dependencies:
   flutter:

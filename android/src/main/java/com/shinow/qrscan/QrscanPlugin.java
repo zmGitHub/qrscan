@@ -1,6 +1,5 @@
 package com.shinow.qrscan;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -21,8 +20,6 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
-import pub.devrel.easypermissions.AfterPermissionGranted;
-import pub.devrel.easypermissions.EasyPermissions;
 
 
 public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityResultListener {
@@ -31,8 +28,6 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
     private Activity activity;
     private int REQUEST_CODE = 100;
     private int REQUEST_IMAGE = 101;
-    public static final int RC_CAMERA = 0X01;
-    public static final int RC_READ_PHOTO = 0X02;
 
     public static void registerWith(Registrar registrar) {
         MethodChannel channel = new MethodChannel(registrar.messenger(), "qr_scan");
@@ -105,17 +100,6 @@ public class QrscanPlugin implements MethodCallHandler, PluginRegistry.ActivityR
         Intent intent = new Intent(activity, CustomActivity.class);
         intent.putExtra("isShowSelf", isShowSelf);
         activity.startActivityForResult(intent, REQUEST_CODE);
-    }
-
-    @AfterPermissionGranted(RC_READ_PHOTO)
-    private void checkExternalStoragePermissions() {
-        String[] perms = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-        if (EasyPermissions.hasPermissions(activity, perms)) {//有权限
-            choosePhotos();
-        } else {
-            EasyPermissions.requestPermissions(this, "请允许获取使用相册权限",
-                    RC_READ_PHOTO, perms);
-        }
     }
 
     private void choosePhotos() {

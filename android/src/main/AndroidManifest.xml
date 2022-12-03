@@ -24,6 +24,9 @@
         android:windowSoftInputMode="stateAlwaysHidden">
 
         <activity android:name=".CustomActivity" />
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2"/>
     </application>
 
 </manifest>
